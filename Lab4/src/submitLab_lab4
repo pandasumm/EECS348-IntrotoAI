@@ -1,0 +1,31 @@
+#!/bin/bash
+if [ $# -eq 1 ]; then
+	if [ -e ~/.eecs348/quarter_data ]; then
+		if [ -e Labs/$1 ]; then
+			if [ -e Labs/$1/src/student_domain.pddl ]; then
+				QUARTER=$(cat ~/.eecs348/quarter_data)
+				PWD=$(cat ~/.eecs348/security_data)
+				STUDENT=$(cat ~/.eecs348/student_data)
+				FILE=$(echo Labs/$1/submissions/$STUDENT'_'$RANDOM$RANDOM.zip)
+				echo "Creating submission file"
+				mkdir Labs/$1/submissions -p
+				zip --password $PWD $FILE Labs/$1/src/student_domain.* -j >/dev/null
+				zip $FILE .eecs348/student_data -j >/dev/null
+				echo "Uploading file"
+				aws s3 cp $FILE s3://eecs348/$QUARTER/Submissions/$1/ >/dev/null
+				echo "Submission finished"
+			else
+				echo "student_code file not found on $1"
+			fi
+		else
+			echo "$1 lab not found"
+		fi
+	else
+		echo "Course configuration is missing"
+		echo "run ./configureIAI"
+    fi
+else
+	echo "missing Lab parameter"
+	echo "usage : ./submitLab <LABNAME>"
+	echo "example : ./submitLab Lab0"
+fi
